@@ -4,7 +4,17 @@ tci.TransitionId.PrecursorId.PeptideId.PeptideModifiedSequence AS PeptideModifie
 tci.TransitionId.PrecursorId.IsotopeLabelId.Name AS IsotopeLabel,
 tci.TransitionId.PrecursorId.Charge AS PrecursorCharge,
 tci.TransitionId.Charge AS ProductCharge,
-CONCAT(tci.TransitionId.FragmentType, tci.TransitionId.FragmentOrdinal) AS FragmentIon,
+
+CASE WHEN tci.TransitionId.NeutralLossMass > 0
+THEN
+(tci.TransitionId.FragmentType || tci.TransitionId.FragmentOrdinal || '-' || ceiling(tci.TransitionId.NeutralLossMass))
+ELSE
+(tci.TransitionId.FragmentType || tci.TransitionId.FragmentOrdinal)
+END
+AS FragmentIon,
+
+
+--CONCAT(tci.TransitionId.FragmentType, tci.TransitionId.FragmentOrdinal) AS FragmentIon,
 tci.Area,
 tci.SampleFileId.ReplicateId.Name AS ReplicateName,
 (SELECT rannot1.Value FROM replicateannotation rannot1 WHERE tci.SampleFileId.replicateId = rannot1.replicateid AND rannot1.Name='Replicate') AS Replicate,
