@@ -1,6 +1,0 @@
-SELECT peptidestructuralmodification.PeptideId,
-peptidestructuralmodification.StructuralModId,
-peptidestructuralmodification.IndexAA,
-peptidestructuralmodification.MassDiff,
-peptidestructuralmodification.StructuralModId.name as modificationType
-FROM peptidestructuralmodification
