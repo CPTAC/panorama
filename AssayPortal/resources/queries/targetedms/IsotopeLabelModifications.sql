@@ -1,0 +1,5 @@
+SELECT
+runisotopemodification.runid.filename,
+runisotopemodification.isotopelabelid.name AS IsotopeLabel,
+runisotopemodification.isotopemodid.name AS IsotopeModification
+FROM runisotopemodification
