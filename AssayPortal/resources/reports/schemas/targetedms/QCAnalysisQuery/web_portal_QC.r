@@ -4,6 +4,8 @@
 
 # UPDATE: return top 3 plots plus sum of ions plot (Sept 2014)
 
+# UPDATE: new sort to get top 3 plots (March 2016)
+
 library(Cairo) # need for producing PNG image using Panoramax
 
 
@@ -668,9 +670,12 @@ if (length(ions) <= 4 ) {
 
 
   results_to_plot <- CV_results[CV_results$fragment_ion!='all' & !is.na(CV_results$low_total_CV) & !is.na(CV_results$med_total_CV) & !is.na(CV_results$high_total_CV) , ]
+   
+  # new sort to get Top 3 plots
+  results_to_plot <- results_to_plot[order(results_to_plot$med_total_CV, results_to_plot$low_total_CV, results_to_plot$high_total_CV), ]
+  
+  three_lowest_med_total_CV <- head(results_to_plot, 3)
 
-
-  three_lowest_med_total_CV <- results_to_plot[results_to_plot$med_total_CV %in% sort(results_to_plot$med_total_CV)[1:3], ]
 
   three_lowest_ions <- as.character(three_lowest_med_total_CV[ , 'fragment_ion'])
 
