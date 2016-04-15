@@ -245,7 +245,7 @@ TSum$ProductCharge <- "";
 resultSum = ddply(TSum, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup), 
 	summarize, Median=median(HLRatio, na.rm= TRUE), Min = min(HLRatio, na.rm=TRUE), Max=max(HLRatio, na.rm=TRUE), CV=sd(HLRatio, na.rm= TRUE)/mean(HLRatio, na.rm= TRUE), LOD=mean(HLRatio, na.rm= TRUE)+ 3* sd(HLRatio, na.rm= TRUE));       
 
-if (internal_standards$Label[1] == "light"){
+if (internal_standards$Label[1] != "light"){
 	temp = ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge), summarize, medianArea=median(heavyArea, na.rm=TRUE))
 }
 
