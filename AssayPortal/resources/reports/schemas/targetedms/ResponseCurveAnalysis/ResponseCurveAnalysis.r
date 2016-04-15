@@ -16,11 +16,11 @@ if (length(mypeptideType) == 0){
 	mypeptideType <- "purified"
 }
 
-#pivot table
+#pivot table 
 
 # Make sure a protein and peptide are selected. Throw an error otherwise.
 if(length(labkey.url.params$query.PeptideModifiedSequence) == 0) {.
- 	stop("PeptideModifiedSequence filter is missing. Please filter the grid to a single protein and peptide to view the results.")
+ 	stop("PeptideModifiedSequence filter is missing. Please filter the grid to a single protein and peptide to view the results.")  
  }
 
 # Columns we will get from the 'precursor' table to determine the internal standard type
@@ -70,40 +70,40 @@ if (is.na(labkey.data$isspike[1])){
 	labkey.data$isspike <- labkey.data$peptideconcentrationis;
 }
 
-labkey.data$area[is.na(labkey.data$area)] <- 0
-labkey.data$background[is.na(labkey.data$background)] <- 0
+labkey.data$area[is.na(labkey.data$area)] <- 0 
+labkey.data$background[is.na(labkey.data$background)] <- 0 
 
 labkey.data$rawArea <- labkey.data$area + labkey.data$background
 
 df <- dcast(labkey.data, protein + peptidemodifiedsequence + precursorcharge + productcharge + fragmention + replicate + concentration + samplegroup + isspike ~ isotopelabel, value.var="rawArea")
 
-
+ 
 colnames(df) <-  c("ProteinName", "PeptideModifiedSequence", "PrecursorCharge", "ProductCharge", "FragmentIon", "Replicate", "Concentration", "SampleGroup", "ISSpike", "heavyArea", "lightArea")
 
 df$lightArea[df$heavyArea ==0] <- NA;
 df$heavyArea[df$lightArea ==0] <- NA;
 
-if (internal_standards$Label[1] == "light"){
+if (internal_standards$Label[1] != "light"){
    df$Ratio <- df$heavyArea/df$lightArea;
 }
 if (internal_standards$Label[1] == "heavy"){
    df$Ratio <- df$lightArea/df$heavyArea;
 }
-
+       
 df <- df[is.finite(df$Ratio),]
 
-if (internal_standards$Label[1] == "light"){
+if (internal_standards$Label[1] != "light"){
 	TSum = ddply(df, .(ProteinName, PeptideModifiedSequence, Concentration, SampleGroup, Replicate, ISSpike), summarize, Ratio = sum(heavyArea, na.rm=TRUE)/sum(lightArea, na.rm=TRUE), heavyArea=sum(heavyArea, na.rm=TRUE), lightArea=sum(lightArea, na.rm=TRUE))
 }
 if (internal_standards$Label[1] == "heavy"){
 	TSum = ddply(df, .(ProteinName, PeptideModifiedSequence, Concentration, SampleGroup, Replicate, ISSpike), summarize, Ratio = sum(lightArea, na.rm=TRUE)/sum(heavyArea, na.rm=TRUE), heavyArea=sum(heavyArea, na.rm=TRUE), lightArea=sum(lightArea, na.rm=TRUE))
 }
 
-
+       
 TSum$FragmentIon <- "Sum.tr";
 TSum$PrecursorCharge <- "";
 TSum$ProductCharge <- "";
-
+       
 TSum <- TSum[, names(df)]
 
 
@@ -111,36 +111,38 @@ df <- rbind(df, TSum)
 
 df$MeasuredConcentration <- df$Ratio * df$ISSpike
 
-
+       
 curveDataIndex <- with(df,  order(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, Replicate))
 thisPeptide <- df[curveDataIndex,]
 thisPeptide$PrecursorCharge <- substr(thisPeptide$PrecursorCharge,1,1)
 thisPeptide$ProductCharge <- substr(thisPeptide$ProductCharge,1,1)
 uniquePeptide <- unique(thisPeptide$PeptideModifiedSequence)
+        
 
 if (length(uniquePeptide) > 1){
   #output error message
 }else{
 #calculate LOD/LOQ
-    thisPeptide$FragmentIon <- paste(thisPeptide$PrecursorCharge, thisPeptide$FragmentIon, thisPeptide$ProductCharge, sep=".")
+    thisPeptide$FragmentIon <- paste(thisPeptide$PrecursorCharge, thisPeptide$FragmentIon, thisPeptide$ProductCharge, sep=".") 
 	lowConc <- sort(unique(thisPeptide$Concentration[thisPeptide$Concentration>0]))[1]
 	usedData <- thisPeptide[,c("FragmentIon", "Concentration", "Replicate", "Ratio")]
 
    usedData <- usedData[(usedData$Concentration == 0 | usedData$Concentration == lowConc ),   ]
-    LODData <- ddply(usedData,  .(FragmentIon, Concentration),
-	summarize, mmean=mean(Ratio, na.rm= TRUE), msd=sd(Ratio, na.rm=TRUE), mqt=qt(0.95,sum(!is.na(Ratio))-1))
+    LODData <- ddply(usedData,  .(FragmentIon, Concentration), 
+	summarize, mmean=mean(Ratio, na.rm= TRUE), msd=sd(Ratio, na.rm=TRUE), mqt=qt(0.95,sum(!is.na(Ratio))-1))   
 
+   
 	methods <- c("blank+low_conc", "blank_only", "rsd_limit")
 	#first method
 	LODData[LODData$Concentration == lowConc,'mmean'] <- 0
 	LOD1 <- ddply(LODData, .(FragmentIon), summarize, LOD=sum(mmean+msd*mqt))
 	LOD1$LOQ <- 3*LOD1$LOD
     names(LOD1) <- c("FragmentIon", paste(methods[1],"LOD", sep="_"), paste(methods[1],"LOQ", sep="_"))
- 	usedData <- usedData[(usedData$Concentration == 0) ,]
+ 	usedData <- usedData[(usedData$Concentration == 0) ,] 
     if (dim(usedData)[1] >0){
-		LOD2 <- ddply(usedData, .(FragmentIon),
+		LOD2 <- ddply(usedData, .(FragmentIon), 
 		summarize, LOD=mean(Ratio, na.rm= TRUE)+ 3* sd(Ratio, na.rm= TRUE), LOQ=mean(Ratio, na.rm= TRUE)+ 10 * sd(Ratio, na.rm= TRUE) )
-
+	
     	names(LOD2) <- c("FragmentIon", paste(methods[2],"LOD", sep="_"), paste(methods[2],"LOQ", sep="_"))
     }
     else{
@@ -152,7 +154,7 @@ if (length(uniquePeptide) > 1){
 	usedData <- usedData[(usedData$Concentration>0 & !is.na(usedData$Ratio)),  ]
 	usedData$estimateConc <- usedData$Concentration * usedData$Ratio;
 	LODData <- ddply(usedData, .(FragmentIon, Concentration), summarize, rsd=sd(estimateConc, na.rm= TRUE)/ mean(estimateConc))
-	LOD3 <- NULL
+	LOD3 <- NULL 
 	rsd.max <- 0.15
 	temp <- by(LODData, LODData[,c( "FragmentIon")],
 			function(x){
@@ -175,10 +177,10 @@ if (length(uniquePeptide) > 1){
     LOD3[,3] <- as.numeric(as.character(LOD3[,3]))
 
 LODTable <- merge(LOD1, LOD2, by="FragmentIon", all=T)
-LODTable <- merge(LODTable, LOD3,  by="FragmentIon", all=T)
+LODTable <- merge(LODTable, LOD3,  by="FragmentIon", all=T)           
 
-result= ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup),
-	summarize, MedianR=median(Ratio, na.rm= TRUE), MinR = min(Ratio, na.rm=TRUE), MaxR=max(Ratio, na.rm=TRUE), CVR=sd(Ratio, na.rm= TRUE)/mean(Ratio, na.rm= TRUE), MedianMeasuredC=median(MeasuredConcentration, na.rm= TRUE), SDMeasuredC=sd(MeasuredConcentration, na.rm= TRUE), MinMeasuredC=min(MeasuredConcentration, na.rm= TRUE), MaxMeasuredC=max(MeasuredConcentration, na.rm= TRUE));
+result= ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup), 
+	summarize, MedianR=median(Ratio, na.rm= TRUE), MinR = min(Ratio, na.rm=TRUE), MaxR=max(Ratio, na.rm=TRUE), CVR=sd(Ratio, na.rm= TRUE)/mean(Ratio, na.rm= TRUE), MedianMeasuredC=median(MeasuredConcentration, na.rm= TRUE), SDMeasuredC=sd(MeasuredConcentration, na.rm= TRUE), MinMeasuredC=min(MeasuredConcentration, na.rm= TRUE), MaxMeasuredC=max(MeasuredConcentration, na.rm= TRUE)); 
 
 result$Median[is.na(result$MedianR)] <- 0;
 
@@ -193,9 +195,9 @@ if (length(uniquePeptide) > 1){
   #output error message
 }else{
 
-
+   
     thisPeptide$FragmentIon <- paste(thisPeptide$PrecursorCharge, thisPeptide$FragmentIon, thisPeptide$ProductCharge, sep=".")
-
+   
     samePeptideLength <- dim(thisPeptide)[1];
     mProtein <- unlist(strsplit(as.character(thisPeptide$ProteinName[1]),"[.]"))[1]
 	mTitle <- paste("Analyte: ", mProtein, ".", uniquePeptide[1], "\n", sep="")
@@ -225,16 +227,16 @@ if (length(uniquePeptide) > 1){
 		print(p)
 		dev.off()
 	}
-
-   #Calculate LOD/LOD
+  
+   #Calculate LOD/LOD 
    {
       	uniqueT <- unique(thisPeptide$FragmentIon)
         thisPeptide <- thisPeptide[thisPeptide$Concentration >0,]
 		thisPeptide <- thisPeptide[with(thisPeptide, order(FragmentIon, Concentration)),]
         thisPeptideR <- thisPeptide[(thisPeptide$MedianMeasuredC != 0 & is.finite(thisPeptide$MedianMeasuredC)),c("FragmentIon", "Concentration", "MedianMeasuredC")]
-        fitR <- NULL;
+        fitR <- NULL;                     
  		for (j in 1:length(uniqueT)){
- 			thisFragmentIon <- thisPeptideR[(thisPeptideR$FragmentIon == uniqueT[j]),]
+ 			thisFragmentIon <- thisPeptideR[(thisPeptideR$FragmentIon == uniqueT[j]),]		
  			x <- thisFragmentIon$Concentration;
  			y <- thisFragmentIon$MedianMeasuredC;
             w <- 1/(y)^2
@@ -248,20 +250,20 @@ if (length(uniquePeptide) > 1){
             }
 		}
         fitR <- as.data.frame(fitR)
-        names(fitR) <-  c("FragmentIon", "Slope", "Intercept", "SlopeStdErr", "InterceptStdErr", "RSquare")
+        names(fitR) <-  c("FragmentIon", "Slope", "Intercept", "SlopeStdErr", "InterceptStdErr", "RSquare")  
    }
    for (i in 2: dim(fitR)[2]){
      fitR[,i] <- as.numeric(as.character(fitR[,i]))
    }
-
-   #write.table(format(LODTable, digits=3), file = "${tsvout:LODTable.csv}", sep = "\t", qmethod = "double", col.names=NA)
-   write.table(format(fitR, digits=3), file = "${tsvout:fitTable.csv}", sep = "\t", qmethod = "double", col.names=NA)
-
+   
+   #write.table(format(LODTable, digits=3), file = "${tsvout:LODTable.csv}", sep = "\t", qmethod = "double", col.names=NA)   
+   write.table(format(fitR, digits=3), file = "${tsvout:fitTable.csv}", sep = "\t", qmethod = "double", col.names=NA)   
+ 
    write.csv(format(fitR, digits=3), file="${fileout:fitTable.csv}")
-
+   
    mergeTable <- merge(LODTable, fitR, by="FragmentIon", all=T)
    mergeTable[,2:7] <-  (mergeTable[,2:7] - mergeTable[,9])  /(mergeTable[,8])
    mergeTable <- mergeTable[,c(1,2,4,6,3,5,7)]
-   write.table(format(mergeTable, digits=3), file = "${tsvout:LODCTable.csv}", sep = "\t", qmethod = "double", col.names=NA)
+   write.table(format(mergeTable, digits=3), file = "${tsvout:LODCTable.csv}", sep = "\t", qmethod = "double", col.names=NA)   
    write.csv(format(mergeTable[,1:7], digits=3), file="${fileout:LODCTable.csv}", row.names=F)
 }

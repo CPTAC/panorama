@@ -81,11 +81,11 @@ fitline <- function(xall, yall){
 			bestUsePoint <- usePoint;
 			bestEndPoint <- TotalPoint-1;
 			bestRSquare <- myRSquare;
-			longest <- bestEndPoint - bestUsePoint + 1;
+			longest <- bestEndPoint - bestUsePoint + 1;	
 		}
 	}
 	#if (myRSquare < 0.98 && usePoint == (TotalPoint-4)){
-	if (TotalPoint-4 >= 1){
+	if (TotalPoint-4 >= 1){	
 		usePoint <- TotalPoint-4;
 		myRSquare <- 1;
 		while (myRSquare > 0.98 && usePoint >=1){
@@ -93,7 +93,7 @@ fitline <- function(xall, yall){
 			y <- yall[usePoint : (TotalPoint-2)];
 			w = 1/y;
 			fit <- lm(y~x, weights = w);
-			myRSquare <- summary(fit)$r.squared;
+			myRSquare <- summary(fit)$r.squared;			
 			usePoint <- usePoint - 1;
 		}
 		if (myRSquare <= 0.98){
@@ -120,7 +120,7 @@ fitline <- function(xall, yall){
 			bestUsePoint <- usePoint;
 			bestEndPoint <- TotalPoint-2;
 			bestRSquare <- myRSquare;
-			longest <- bestEndPoint - bestUsePoint + 1;
+			longest <- bestEndPoint - bestUsePoint + 1;	
 		}
 	}
 	if ( TotalPoint <3 ) {
@@ -129,7 +129,7 @@ fitline <- function(xall, yall){
 		x <- xall[bestUsePoint : bestEndPoint];
 		y <- yall[bestUsePoint : bestEndPoint];
 		w <- 1/y;
-		fit <- lm(y~x, weights = w);
+		fit <- lm(y~x, weights = w); 
 		mCoef <- coef(summary(fit));
 		mResidual <- c(TotalPoint);
 		for (i in 1: TotalPoint){
@@ -141,9 +141,9 @@ fitline <- function(xall, yall){
 	}
 }
 
+       
 
-
-#pivot table
+#pivot table 
 
 myplotType <- labkey.url.params$plotType
 if (length(myplotType) == 0){
@@ -155,10 +155,10 @@ if (length(mypeptideType) == 0){
 	mypeptideType <- "purified"
     #mypeptideType <- "crude"
 }
-
+       
 # Make sure a protein and peptide are selected. Throw an error otherwise.
 if( length(labkey.url.params$query.PeptideModifiedSequence) == 0) {.
- 	stop("PeptideModifiedSequence filter is missing. Please filter the grid to a single protein and peptide to view the results.")
+ 	stop("PeptideModifiedSequence filter is missing. Please filter the grid to a single protein and peptide to view the results.")  
  }
 
 # Columns we will get from the 'precursor' table to determine the internal standard type
@@ -184,8 +184,8 @@ internal_standards <- isotopelabels[isotopelabels$Standard=='TRUE',]
 if(nrow(internal_standards) > 1) {
    stop("Multiple internal standard types found")
 }
-
-if (sum(names(labkey.data$name) == "donotuse") > 0){
+       
+if (sum(names(labkey.data$name) == "donotuse") > 0){ 
 	labkey.data$donotuse <- as.character(labkey.data$donotuse)
 	labkey.data$donotuse[is.na(labkey.data$donotuse)] <- "FALSE"
 	labkey.data$donotuse[tolower(labkey.data$donotuse) == "x"] <- "TRUE"
@@ -205,17 +205,17 @@ if (is.na(labkey.data$concentration[1])){
 if(length(unique(labkey.data$concentration)) <2) {
    stop("More than one concentration level needed.")
 }
-
+       
 
 if (is.na(labkey.data$isspike[1])){
 	labkey.data$isspike <- labkey.data$peptideconcentrationis;
 }
-labkey.data$area[is.na(labkey.data$area)] <- 0
+labkey.data$area[is.na(labkey.data$area)] <- 0 
 if (length(grep("background", names(labkey.data))) >0){
-	labkey.data$background[is.na(labkey.data$background)] <- 0
- 	labkey.data$rawArea <- labkey.data$area + labkey.data$background
+	labkey.data$background[is.na(labkey.data$background)] <- 0 
+ 	labkey.data$rawArea <- labkey.data$area + labkey.data$background 
 }else{
-	labkey.data$rawArea <- labkey.data$area
+	labkey.data$rawArea <- labkey.data$area 
 }
 
 df <- dcast(labkey.data, protein + peptidemodifiedsequence + precursorcharge + productcharge + fragmention + replicate + concentration + samplegroup + isspike ~ isotopelabel, value.var="rawArea")
@@ -229,7 +229,7 @@ df$lightArea[is.na(df$heavyArea)] = NA;
 df$heavyArea[is.na(df$lightArea)] = NA;
 df$heavyArea[df$lightArea==0] <- NA;
 
-if (internal_standards$Label == "light"){
+if (internal_standards$Label != "light"){
    df$HLRatio <- df$heavyArea/df$lightArea;
 }
 if (internal_standards$Label == "heavy"){
@@ -242,8 +242,8 @@ TSum = ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, Concen
 TSum$FragmentIon <- "SUM";
 TSum$ProductCharge <- "";
 
-resultSum = ddply(TSum, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup),
-	summarize, Median=median(HLRatio, na.rm= TRUE), Min = min(HLRatio, na.rm=TRUE), Max=max(HLRatio, na.rm=TRUE), CV=sd(HLRatio, na.rm= TRUE)/mean(HLRatio, na.rm= TRUE), LOD=mean(HLRatio, na.rm= TRUE)+ 3* sd(HLRatio, na.rm= TRUE));
+resultSum = ddply(TSum, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup), 
+	summarize, Median=median(HLRatio, na.rm= TRUE), Min = min(HLRatio, na.rm=TRUE), Max=max(HLRatio, na.rm=TRUE), CV=sd(HLRatio, na.rm= TRUE)/mean(HLRatio, na.rm= TRUE), LOD=mean(HLRatio, na.rm= TRUE)+ 3* sd(HLRatio, na.rm= TRUE));       
 
 if (internal_standards$Label[1] == "light"){
 	temp = ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge), summarize, medianArea=median(heavyArea, na.rm=TRUE))
@@ -258,8 +258,8 @@ orderT <- with(temp,  order(ProteinName, PeptideModifiedSequence, -medianArea))
 df <- merge(df, temp[orderT[1:3], ])
 
 
-resultT= ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup),
-	summarize, Median=median(HLRatio, na.rm= TRUE), Min = min(HLRatio, na.rm=TRUE), Max=max(HLRatio, na.rm=TRUE), CV=sd(HLRatio, na.rm= TRUE)/mean(HLRatio, na.rm= TRUE), LOD=mean(HLRatio, na.rm= TRUE)+ 3* sd(HLRatio, na.rm= TRUE));
+resultT= ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup), 
+	summarize, Median=median(HLRatio, na.rm= TRUE), Min = min(HLRatio, na.rm=TRUE), Max=max(HLRatio, na.rm=TRUE), CV=sd(HLRatio, na.rm= TRUE)/mean(HLRatio, na.rm= TRUE), LOD=mean(HLRatio, na.rm= TRUE)+ 3* sd(HLRatio, na.rm= TRUE));       
 
 result <- rbind(resultT, resultSum)
 
@@ -287,7 +287,7 @@ if (length(uniquePeptide) > 1){
        if (tolower(mypeptideType) == "crude"){
 			mxlabel <- "\nTheoretical Concentration (fmol/uL)\nEstimated from unpurified peptide"
           mcolor <- "red"
-    	}
+    	}       
   		CairoPNG(filename="${imgout:response_curve_png}", width=800, height=600, bg="white")
 		p<- ggplot(data=thisPeptide, aes(x=Concentration, y=Median, color=FragmentIon)) + geom_errorbar(aes(ymin=Min, ymax=Max), width=.8) + geom_smooth(method=lm, se=FALSE) +geom_point(size=2) + xlab(mxlabel) + ylab("Peak Area Ratio") + theme(title=element_text(size=18, colour="black"), axis.text=element_text(size=16), axis.text.x=element_text(colour=mcolor), axis.title=element_text(size=20) , axis.title.x=element_text(colour=mcolor), legend.position = c(0.15, 0.85), legend.title = element_text(size=14), legend.text = element_text(size=14))+ labs(title=mTitle)+ scale_colour_discrete(name = "Transition")
 		print(p)
@@ -299,10 +299,10 @@ if (length(uniquePeptide) > 1){
        if (tolower(mypeptideType) == "crude"){
 			mxlabel <- "\nLog Theoretical Concentration (fmol/uL)\nEstimated from unpurified peptide"
           mcolor <- "red"
-    	}
+    	}       
        CairoPNG(filename="${imgout:response_curve_png}", width=800, height=600, bg="white")
        pd <- position_dodge(.05)
-		p<- ggplot(data=thisPeptide[thisPeptide$Concentration >0,], aes(x=log(Concentration,10), y=log(Median,10), color=FragmentIon)) + geom_errorbar(aes(ymin=log(Min,10), ymax=log(Max,10)), position=pd, width=.08) +geom_point(position=pd, size=2) + xlab(mxlabel) + ylab("Log Peak Area Ratio") + theme(title=element_text(size=18, colour="black"), axis.text=element_text(size=16),   axis.text.x=element_text(colour=mcolor), axis.title=element_text(size=20) , axis.title.x=element_text( colour=mcolor), legend.position = c(0.2, 0.85), legend.title = element_text(size=14), legend.text = element_text(size=14))+ labs(title=mTitle)+ scale_colour_discrete(name = "Transition")
+		p<- ggplot(data=thisPeptide[thisPeptide$Concentration >0,], aes(x=log(Concentration,10), y=log(Median,10), color=FragmentIon)) + geom_errorbar(aes(ymin=log(Min,10), ymax=log(Max,10)), position=pd, width=.08) +geom_point(position=pd, size=2) + xlab(mxlabel) + ylab("Log Peak Area Ratio") + theme(title=element_text(size=18, colour="black"), axis.text=element_text(size=16),   axis.text.x=element_text(colour=mcolor), axis.title=element_text(size=20) , axis.title.x=element_text( colour=mcolor), legend.position = c(0.2, 0.85), legend.title = element_text(size=14), legend.text = element_text(size=14))+ labs(title=mTitle)+ scale_colour_discrete(name = "Transition")    
 		print(p)
 		dev.off()
 	}
@@ -312,16 +312,16 @@ if (length(uniquePeptide) > 1){
        if (tolower(mypeptideType) == "crude"){
 			mxlabel <- "\nLog Theoretical Concentration (fmol/uL)\nEstimated from unpurified peptide"
           mcolor <- "red"
-    	}
+    	}       
 	    uniqueT <- unique(thisPeptide$FragmentIon)
 		thisPeptide <- thisPeptide[with(thisPeptide, order(FragmentIon, Concentration)),]
-		thisPeptideR <- thisPeptide[(thisPeptide$Median != 0 & is.finite(thisPeptide$Median)),  ]
+		thisPeptideR <- thisPeptide[(thisPeptide$Median != 0 & is.finite(thisPeptide$Median)),  ]      
  		for (j in 1:length(uniqueT)){
- 			thisFragmentIon <- thisPeptideR[(thisPeptideR$FragmentIon == uniqueT[j]),]
+ 			thisFragmentIon <- thisPeptideR[(thisPeptideR$FragmentIon == uniqueT[j]),]		
  			x <- thisFragmentIon$Concentration;
  			y <- thisFragmentIon$Median;
             if (length(x) > 2){
- 	 			Lvalue <- fitline(x,y)
+ 	 			Lvalue <- fitline(x,y)       
  			    thisPeptideR$Residual[(thisPeptideR$FragmentIon == uniqueT[j])] <- Lvalue$mResidual;
             }else{
                 thisPeptideR$Residual[(thisPeptideR$FragmentIon == uniqueT[j])] <- NA
