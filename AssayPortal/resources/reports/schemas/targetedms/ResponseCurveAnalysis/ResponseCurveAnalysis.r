@@ -83,7 +83,7 @@ colnames(df) <-  c("ProteinName", "PeptideModifiedSequence", "PrecursorCharge", 
 df$lightArea[df$heavyArea ==0] <- NA;
 df$heavyArea[df$lightArea ==0] <- NA;
 
-if (internal_standards$Label[1] != "light"){
+if (internal_standards$Label[1]  != "heavy"){
    df$Ratio <- df$heavyArea/df$lightArea;
 }
 if (internal_standards$Label[1] == "heavy"){
@@ -92,7 +92,7 @@ if (internal_standards$Label[1] == "heavy"){
        
 df <- df[is.finite(df$Ratio),]
 
-if (internal_standards$Label[1] != "light"){
+if (internal_standards$Label[1] != "heavy"){
 	TSum = ddply(df, .(ProteinName, PeptideModifiedSequence, Concentration, SampleGroup, Replicate, ISSpike), summarize, Ratio = sum(heavyArea, na.rm=TRUE)/sum(lightArea, na.rm=TRUE), heavyArea=sum(heavyArea, na.rm=TRUE), lightArea=sum(lightArea, na.rm=TRUE))
 }
 if (internal_standards$Label[1] == "heavy"){
