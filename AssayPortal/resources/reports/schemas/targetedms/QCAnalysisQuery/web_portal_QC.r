@@ -6,6 +6,12 @@
 
 # UPDATE: new sort to get top 3 plots (March 2016)
 
+# UPDATE: in cases where there are medium labeled peptides instead of light labeled peptides, 
+#   'medium' Isotope Label is converted to 'light' Isotope Label to calculate variable/constant ratios (April 2016)
+# For a reverse curve: H/L = H/M. For a forward curve: L/H = M/H.
+
+# UPDATE: convert all sample_group values to Lo, Med, Hi based on first character (L, M, H) of sample_group (April 2016)
+
 library(Cairo) # need for producing PNG image using Panoramax
 
 
@@ -176,11 +182,13 @@ QC_set[,'area'] <- as.numeric(as.character(QC_set[,'area']))
 # remove factor version
 QC_set[,'fragment_ion'] <- as.character(QC_set[,'fragment_ion'])
 QC_set[,'sample_group'] <- as.character(QC_set[,'sample_group'])
+QC_set[,'isotope_label_type'] <- as.character(QC_set[,'isotope_label_type'])
 
-# convert all sample_group values to Lo, Med, Hi
-QC_set[toupper(QC_set$sample_group)=='LO','sample_group'] <- 'Lo'
-QC_set[toupper(QC_set$sample_group)=='MED','sample_group'] <- 'Med'
-QC_set[toupper(QC_set$sample_group)=='HI','sample_group'] <- 'Hi'
+# new: April 2016
+# convert all sample_group values to Lo, Med, Hi based on first character of sample_group
+QC_set[toupper(substr(QC_set$sample_group, 1, 1))=="L","sample_group"] <- "Lo"
+QC_set[toupper(substr(QC_set$sample_group, 1, 1))=="M","sample_group"] <- "Med"
+QC_set[toupper(substr(QC_set$sample_group, 1, 1))=="H","sample_group"] <- "Hi"
 
 
 # get a list of all unique fragment ions associated with current peptide
@@ -201,6 +209,20 @@ sample_groups <- sort(unique(QC_set[ , 'sample_group']))
 replicates <- sort(unique(QC_set[ , 'replicate']))
 
 
+# new: April 2016
+# *** for medium labled peptides ***
+isotope_label_types <- unique(QC_set[ , 'isotope_label_type'])
+
+
+if(('light' %in% isotope_label_types) & ('medium' %in% isotope_label_types)) {
+  
+    stop("both light and medium isotope label found in dataset")
+  
+} else {
+  
+  QC_set$isotope_label_type[QC_set$isotope_label_type == "medium"] <- "light"
+  
+}
 
 
 sum_light_area <- 0
