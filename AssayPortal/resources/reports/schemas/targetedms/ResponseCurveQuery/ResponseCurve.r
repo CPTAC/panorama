@@ -238,7 +238,16 @@ if (internal_standards$Label == "heavy"){
 
 df <- df[is.finite(df$HLRatio),]
 
-TSum = ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, Concentration, SampleGroup, Replicate), summarize, HLRatio = sum(heavyArea, na.rm=TRUE)/sum(lightArea, na.rm=TRUE))
+if (internal_standards$Label[1] != "heavy"){
+	TSum = ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, Concentration, SampleGroup, Replicate), summarize, HLRatio = sum(heavyArea, na.rm=TRUE)/sum(lightArea, na.rm=TRUE))
+}
+
+
+if (internal_standards$Label[1] == "heavy"){
+	TSum = ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, Concentration, SampleGroup, Replicate), summarize, HLRatio = sum(lightArea, na.rm=TRUE)/sum(heavyArea, na.rm=TRUE))
+}
+
+
 TSum$FragmentIon <- "SUM";
 TSum$ProductCharge <- "";
 
