@@ -169,7 +169,7 @@ cols <- c("PeptideId/PeptideGroupId/Label",      # Protein name
               "IsotopeLabelId/Standard"                  # true or false
              );
 isotopelabels <- labkey.selectRows(
-    baseUrl="https://panoramaweb.org:8443/labkey/",
+    baseUrl=labkey.url.base,
     folderPath=labkey.url.path,
     schemaName="targetedms",
     queryName="precursor",
