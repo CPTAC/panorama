@@ -191,18 +191,21 @@ if (sum(names(labkey.data$name) == "donotuse") > 0){
 	labkey.data$donotuse[tolower(labkey.data$donotuse) == "x"] <- "TRUE"
 	labkey.data <- labkey.data[tolower(labkey.data$donotuse) != "true",];
 }
+
+colnames(labkey.data)[colnames(labkey.data)=="analyteconcentration"] <- "concentration"
+colnames(labkey.data)[colnames(labkey.data)=="internalstandardconcentration"] <- "isspike"
+colnames(labkey.data)[colnames(labkey.data)=="concentrationmultiplier"] <- "multiplicationfactor"
+colnames(labkey.data)[colnames(labkey.data)=="replicatenumber"] <- "replicate"
+
 labkey.data$concentration <- as.numeric(as.character(labkey.data$concentration))
-labkey.data$peptideconcentration <- as.numeric(as.character(labkey.data$peptideconcentration))
+#labkey.data$peptideconcentration <- as.numeric(as.character(labkey.data$peptideconcentration))
 labkey.data$multiplicationfactor <- as.numeric(as.character(labkey.data$multiplicationfactor))
-labkey.data$peptideconcentrationis <- as.numeric(as.character(labkey.data$peptideconcentrationis))
+#labkey.data$peptideconcentrationis <- as.numeric(as.character(labkey.data$peptideconcentrationis))
 labkey.data$area <- as.numeric(as.character(labkey.data$area))
 labkey.data$background <- as.numeric(as.character(labkey.data$background))
 
-
-labkey.data$concentration <- labkey.data$concentration/20
-
-if (is.na(labkey.data$concentration[1])){
-	labkey.data$concentration <- labkey.data$peptideconcentration * labkey.data$multiplicationfactor;
+if (!is.na(labkey.data$multiplicationfactor[1])){
+	labkey.data$concentration <- labkey.data$concentration * labkey.data$multiplicationfactor;
 }
 
 if(length(unique(labkey.data$concentration)) <2) {
@@ -210,9 +213,11 @@ if(length(unique(labkey.data$concentration)) <2) {
 }
        
 
-if (is.na(labkey.data$isspike[1])){
-	labkey.data$isspike <- labkey.data$peptideconcentrationis;
-}
+#if (is.na(labkey.data$isspike[1])){
+#	labkey.data$isspike <- labkey.data$peptideconcentrationis;
+#}
+
+
 labkey.data$area[is.na(labkey.data$area)] <- 0 
 if (length(grep("background", names(labkey.data))) >0){
 	labkey.data$background[is.na(labkey.data$background)] <- 0 
@@ -294,10 +299,10 @@ if (length(uniquePeptide) > 1){
 	mTitle <- paste("Analyte: ", mProtein, ".", uniquePeptide[1], "\n", sep="")
     thisPeptide$Max[thisPeptide$Max > max(thisPeptide$Median)*2] <- max(thisPeptide$Median)
     if ( tolower(myplotType) == "linear") {
-	   mxlabel <- "\nTheoretical Concentration (fmol/20uL per injection)"
+	   mxlabel <- "\nTheoretical Concentration (fmol/uL)"
 	   mcolor <- "black"
        if (tolower(mypeptideType) == "crude"){
-			mxlabel <- "\nTheoretical Concentration (fmol/ 20uL per injection)\nEstimated from unpurified peptide"
+			mxlabel <- "\nTheoretical Concentration (fmol/uL)\nEstimated from unpurified peptide"
           mcolor <- "red"
     	}       
   		CairoPNG(filename="${imgout:response_curve_png}", width=800, height=600, bg="white")
@@ -306,10 +311,10 @@ if (length(uniquePeptide) > 1){
 		dev.off()
     }
     if (tolower(myplotType) == "log"){
-       mxlabel <- "\nLog Theoretical Concentration (fmol/20uL per injection)"
+       mxlabel <- "\nLog Theoretical Concentration (fmol/uL)"
 	   mcolor <- "black"
        if (tolower(mypeptideType) == "crude"){
-			mxlabel <- "\nLog Theoretical Concentration (fmol/20 uL per injection)\nEstimated from unpurified peptide"
+			mxlabel <- "\nLog Theoretical Concentration (fmol/uL)\nEstimated from unpurified peptide"
           mcolor <- "red"
     	}       
        CairoPNG(filename="${imgout:response_curve_png}", width=800, height=600, bg="white")
@@ -319,10 +324,10 @@ if (length(uniquePeptide) > 1){
 		dev.off()
 	}
     if ( tolower(myplotType) == "residual"){
-       mxlabel <- "\nLog Theoretical Concentration (fmol/20uL per injection)"
+       mxlabel <- "\nLog Theoretical Concentration (fmol/uL)"
        mcolor <- "black"
        if (tolower(mypeptideType) == "crude"){
-			mxlabel <- "\nLog Theoretical Concentration (fmol/20 uL per injection)\nEstimated from unpurified peptide"
+			mxlabel <- "\nLog Theoretical Concentration (fmol/uL)\nEstimated from unpurified peptide"
           mcolor <- "red"
     	}       
 	    uniqueT <- unique(thisPeptide$FragmentIon)
