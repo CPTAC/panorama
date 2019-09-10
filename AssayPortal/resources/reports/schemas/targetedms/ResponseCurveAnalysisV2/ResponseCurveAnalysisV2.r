@@ -38,7 +38,6 @@ isotopelabels <- labkey.selectRows(
     schemaName="targetedms",
     queryName="precursor",
     colSelect=paste(cols, sep=","),
-    #colFilter=makeFilter(c("PeptideId/PeptideGroupId/Label", "EQUAL", labkey.url.params$query.Protein),c("PeptideId/PeptideModifiedSequence", "EQUAL", labkey.url.params$query.PeptideModifiedSequence)) 
     colFilter=makeFilter(c("PeptideId/PeptideModifiedSequence", "EQUAL", labkey.url.params$query.PeptideModifiedSequence))
 )
 
@@ -54,24 +53,28 @@ if(nrow(internal_standards) > 1) {
 labkey.data$donotuse <- as.character(labkey.data$donotuse)
 labkey.data$donotuse[is.na(labkey.data$donotuse)] <- "FALSE"
 labkey.data$donotuse[tolower(labkey.data$donotuse) == "x"] <- "TRUE"
-labkey.data <- labkey.data[tolower(labkey.data$donotuse) != "true",];
+labkey.data <- labkey.data[tolower(labkey.data$donotuse) != "true",]
+
+colnames(labkey.data)[colnames(labkey.data)=="analyteconcentration"] <- "concentration"
+colnames(labkey.data)[colnames(labkey.data)=="internalstandardconcentration"] <- "isspike"
+colnames(labkey.data)[colnames(labkey.data)=="concentrationmultiplier"] <- "multiplicationfactor"
+colnames(labkey.data)[colnames(labkey.data)=="replicatenumber"] <- "replicate"
+
 labkey.data$concentration <- as.numeric(as.character(labkey.data$concentration))
-labkey.data$peptideconcentration <- as.numeric(as.character(labkey.data$peptideconcentration))
+#labkey.data$peptideconcentration <- as.numeric(as.character(labkey.data$peptideconcentration))
 labkey.data$multiplicationfactor <- as.numeric(as.character(labkey.data$multiplicationfactor))
-labkey.data$peptideconcentrationis <- as.numeric(as.character(labkey.data$peptideconcentrationis))
+#labkey.data$peptideconcentrationis <- as.numeric(as.character(labkey.data$peptideconcentrationis))
 labkey.data$area <- as.numeric(as.character(labkey.data$area))
 labkey.data$background <- as.numeric(as.character(labkey.data$background))
 
-if (is.na(labkey.data$concentration[1])){
-	labkey.data$concentration <- labkey.data$peptideconcentration * labkey.data$multiplicationfactor;
+if (!is.na(labkey.data$multiplicationfactor[1])){
+	labkey.data$concentration <- labkey.data$concentration * labkey.data$multiplicationfactor;
 }
 
 
-if (is.na(labkey.data$isspike[1])){
-	labkey.data$isspike <- labkey.data$peptideconcentrationis;
-}
-
-labkey.data$concentration <- labkey.data$concentration/20
+#if (is.na(labkey.data$isspike[1])){
+#	labkey.data$isspike <- labkey.data$peptideconcentrationis;
+#}
 
 labkey.data$area[is.na(labkey.data$area)] <- 0 
 labkey.data$background[is.na(labkey.data$background)] <- 0 
@@ -112,14 +115,13 @@ TSum <- TSum[, names(df)]
 
 df <- rbind(df, TSum)
 
-#df$MeasuredConcentration <- (df$Ratio * df$ISSpike)/20
-#df$MeasuredConcentration <- df$Ratio * df$ISSpike
+
 if (all(df$ISSpike) == 0) {
     df$MeasuredConcentration <- df$Ratio
 } else {
     df$MeasuredConcentration <- df$Ratio * df$ISSpike
 }
-       
+
 curveDataIndex <- with(df,  order(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, Replicate))
 thisPeptide <- df[curveDataIndex,]
 thisPeptide$PrecursorCharge <- substr(thisPeptide$PrecursorCharge,1,1)
@@ -265,7 +267,7 @@ if (length(uniquePeptide) > 1){
    }
    
    #write.table(format(LODTable, digits=3), file = "${tsvout:LODTable.csv}", sep = "\t", qmethod = "double", col.names=NA)   
-   write.table(format(fitR, digits=3), file = "${tsvout:fitTable}", sep = "\t", qmethod = "double", col.names=NA)   
+   write.table(format(fitR, digits=3), file = "${tsvout:fitTable.csv}", sep = "\t", qmethod = "double", col.names=NA)   
  
    write.csv(format(fitR, digits=3), file="${fileout:fitTable.csv}")
    
