@@ -7,7 +7,7 @@ subprojects {
     {
         p.evaluationDependsOn(BuildUtils.getApiProjectPath(p.gradle))
         apply plugin: 'java'
-        apply plugin: 'org.labkey.fileModule' // This repository should only contain file-based modules
+        apply plugin: 'org.labkey.build.fileModule' // This repository should only contain file-based modules
     }
 }
 
